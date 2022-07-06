@@ -1,0 +1,731 @@
+clear all; close all ; clc
+% Loading the Point Cloud Scan_TRIOS
+ptCloud_PRIME = pcread('SCAN_PRIME_MD12.ply');
+% Loading the Point Cloud Scan_TRIOS
+ptCloud_TRIOS = pcread('SCAN_TRIOS_MD12.ply');
+% Image Display  Scan_TRIOS
+figure(1)
+pcshow(ptCloud_PRIME);
+title('Detecting The Cylinder PRIME')
+xlabel('X(mm)');
+ylabel('Y(mm)');
+zlabel('Z(mm)');
+hold on
+% Image Display Scan_PRIME
+figure(2)
+pcshow(ptCloud_TRIOS);
+title('Detecting The Cylinder TRIOS')
+xlabel('X(mm)');
+ylabel('Y(mm)');
+zlabel('Z(mm)'); 
+hold on
+%%
+%Set the maximum point-to-cylinder distance (5 mm) for cylinder fitting.
+maxDistance = 0.005;
+% Set the region of interest to constrain the search.
+roi1_PRIME =[-40,-5, 10,30, -10,10];
+roi2_PRIME =[0,30, 25,40, -10,10];
+roi1_TRIOS = [-15,-5 ,0,10,-30,-5];
+roi2_TRIOS = [-15,-5 ,0,10,-6,30];
+sampleIndices1_PRIME = findPointsInROI(ptCloud_PRIME,roi1_PRIME);
+sampleIndices2_PRIME = findPointsInROI(ptCloud_PRIME,roi2_PRIME);
+
+sampleIndices1_TRIOS = findPointsInROI(ptCloud_TRIOS,roi1_TRIOS);
+sampleIndices2_TRIOS = findPointsInROI(ptCloud_TRIOS,roi2_TRIOS);
+%%
+% Fit the cylinder Model into the Point Cloud
+%TRIOS_SCAN
+Model1_TRIOS_X1 = zeros(1,100);
+Model1_TRIOS_X2 = zeros(1,100);
+Model1_TRIOS_Y1 = zeros(1,100);
+Model1_TRIOS_Y2 = zeros(1,100);
+Model1_TRIOS_Z1 = zeros(1,100);
+Model1_TRIOS_Z2 = zeros(1,100);
+Model1_TRIOS_Radius = zeros(1,100);
+Model1_TRIOS_Height = zeros(1,100);
+Model1_TRIOS_Center_X = zeros(1,100);
+Model1_TRIOS_Center_Y = zeros(1,100);
+Model1_TRIOS_Center_Z = zeros(1,100);
+Model1_TRIOS_Orientation_X_ = zeros(1,100);
+Model1_TRIOS_Orientation_Y = zeros(1,100);
+Model1_TRIOS_Orientation_Z = zeros(1,100);
+Model2_TRIOS_X1 = zeros(1,100);
+Model2_TRIOS_X2 = zeros(1,100);
+Model2_TRIOS_Y1 = zeros(1,100);
+Model2_TRIOS_Y2 = zeros(1,100);
+Model2_TRIOS_Z1 = zeros(1,100);
+Model2_TRIOS_Z2 = zeros(1,100);
+Model2_TRIOS_Radius = zeros(1,100);
+Model2_TRIOS_Height = zeros(1,100);
+Model2_TRIOS_Center_X = zeros(1,100);
+Model2_TRIOS_Center_Y = zeros(1,100);
+Model2_TRIOS_Center_Z = zeros(1,100);
+Model2_TRIOS_Orientation_X = zeros(1,100);
+Model2_TRIOS_Orientation_Y = zeros(1,100);
+Model2_TRIOS_Orientation_Z = zeros(1,100);
+Model1_TRIOS_Z1_NP = Model1_TRIOS_Z1;
+Model1_TRIOS_Z2_PP = Model1_TRIOS_Z2;
+Model2_TRIOS_Z1_NP = Model2_TRIOS_Z1;
+Model2_TRIOS_Z2_PP = Model2_TRIOS_Z2;
+CosTheta_TRIOS = zeros(1,100);
+Theta_TRIOS = zeros(1,100);
+Theta_TRIOS_V = zeros(1,100);
+
+% Fit the cylinder Model into the Point Cloud
+%PRIME_SCAN
+Model1_PRIME_X1 = zeros(1,100);
+Model1_PRIME_X2 = zeros(1,100);
+Model1_PRIME_Y1 = zeros(1,100);
+Model1_PRIME_Y2 = zeros(1,100);
+Model1_PRIME_Z1 = zeros(1,100);
+Model1_PRIME_Z2 = zeros(1,100);
+Model1_PRIME_Radius = zeros(1,100);
+Model1_PRIME_Height = zeros(1,100);
+Model1_PRIME_Center_X = zeros(1,100);
+Model1_PRIME_Center_Y = zeros(1,100);
+Model1_PRIME_Center_Z = zeros(1,100);
+Model1_PRIME_Orientation_X_ = zeros(1,100);
+Model1_PRIME_Orientation_Y = zeros(1,100);
+Model1_PRIME_Orientation_Z = zeros(1,100);
+Model2_PRIME_X1 = zeros(1,100);
+Model2_PRIME_X2 = zeros(1,100);
+Model2_PRIME_Y1 = zeros(1,100);
+Model2_PRIME_Y2 = zeros(1,100);
+Model2_PRIME_Z1 = zeros(1,100);
+Model2_PRIME_Z2 = zeros(1,100);
+Model2_PRIME_Radius = zeros(1,100);
+Model2_PRIME_Height = zeros(1,100);
+Model2_PRIME_Center_X = zeros(1,100);
+Model2_PRIME_Center_Y = zeros(1,100);
+Model2_PRIME_Center_Z = zeros(1,100);
+Model2_PRIME_Orientation_X = zeros(1,100);
+Model2_PRIME_Orientation_Y = zeros(1,100);
+Model2_PRIME_Orientation_Z = zeros(1,100);
+Model1_PRIME_X1_NP = Model1_PRIME_X1;
+Model1_PRIME_X2_PP = Model1_PRIME_X2;
+Model2_PRIME_X1_NP = Model2_PRIME_X1;
+Model2_PRIME_X2_PP = Model2_PRIME_X2;
+Model1_PRIME_Y1_2P = Model1_PRIME_Y1;
+Model1_PRIME_Y2_3P = Model1_PRIME_Y2;
+Model2_PRIME_Y1_2P = Model2_PRIME_Y1;
+Model2_PRIME_Y2_3P = Model2_PRIME_Y2;
+CosTheta_PRIME = zeros(1,100);
+Theta_PRIME = zeros(1,100);
+Theta_PRIME_V = zeros(1,100);
+
+for i=1:1:100
+    % MODEL 1
+    SCAN_PRIME_MODEL1 = pcfitcylinder(ptCloud_PRIME,maxDistance, 'SampleIndices',sampleIndices1_PRIME);
+    SCAN_TRIOS_MODEL1 = pcfitcylinder(ptCloud_TRIOS,maxDistance, 'SampleIndices',sampleIndices1_TRIOS);
+%PRIMESCAN
+    Model1_PRIME_X1(i) = SCAN_PRIME_MODEL1.Parameters(1);
+    Model1_PRIME_X2(i) = SCAN_PRIME_MODEL1.Parameters(4);
+    Model1_PRIME_Y1(i) = SCAN_PRIME_MODEL1.Parameters(2);
+    Model1_PRIME_Y2(i) = SCAN_PRIME_MODEL1.Parameters(5);
+    Model1_PRIME_Z1(i) = SCAN_PRIME_MODEL1.Parameters(3);
+    Model1_PRIME_Z2(i) = SCAN_PRIME_MODEL1.Parameters(6);
+    Model1_PRIME_Radius(i) = SCAN_PRIME_MODEL1.Parameters(7);
+    Model1_PRIME_Height(i) = SCAN_PRIME_MODEL1.Height;
+    Model1_PRIME_Center_X(i) = SCAN_PRIME_MODEL1.Center(1);
+    Model1_PRIME_Center_Y(i) = SCAN_PRIME_MODEL1.Center(2);
+    Model1_PRIME_Center_Z(i) = SCAN_PRIME_MODEL1.Center(3);
+    Model1_PRIME_Orientation_X_(i) = SCAN_PRIME_MODEL1.Orientation(1);
+    Model1_PRIME_Orientation_Y(i) = SCAN_PRIME_MODEL1.Orientation(2);
+    Model1_PRIME_Orientation_Z(i) = SCAN_PRIME_MODEL1.Orientation(3);
+    Model1_PRIME_X1_NP(i) = Model2_PRIME_X1(i);
+    Model1_PRIME_X2_PP(i) = Model2_PRIME_X2(i);
+    Model1_PRIME_X1_NP(i) = Model2_PRIME_X1(i);
+    Model1_PRIME_X2_PP(i) = Model2_PRIME_X2(i);
+    Model1_PRIME_Y1_2P(i) = Model2_PRIME_Y1(i);
+    Model1_PRIME_Y2_3P(i) = Model2_PRIME_Y2(i);
+    Model1_PRIME_Y1_2P(i) = Model2_PRIME_Y1(i);
+    Model1_PRIME_Y2_3P(i) = Model2_PRIME_Y2(i);
+% TRIOSSCAN
+    Model1_TRIOS_X1(i) = SCAN_TRIOS_MODEL1.Parameters(1);
+    Model1_TRIOS_X2(i) = SCAN_TRIOS_MODEL1.Parameters(4);
+    Model1_TRIOS_Y1(i) = SCAN_TRIOS_MODEL1.Parameters(2);
+    Model1_TRIOS_Y2(i) = SCAN_TRIOS_MODEL1.Parameters(5);
+    Model1_TRIOS_Z1(i) = SCAN_TRIOS_MODEL1.Parameters(3);
+    Model1_TRIOS_Z2(i) = SCAN_TRIOS_MODEL1.Parameters(6);
+    Model1_TRIOS_Radius(i) = SCAN_TRIOS_MODEL1.Parameters(7);
+    Model1_TRIOS_Height(i) = SCAN_TRIOS_MODEL1.Height;
+    Model1_TRIOS_Center_X(i) = SCAN_TRIOS_MODEL1.Center(1);
+    Model1_TRIOS_Center_Y(i) = SCAN_TRIOS_MODEL1.Center(2);
+    Model1_TRIOS_Center_Z(i) = SCAN_TRIOS_MODEL1.Center(3);
+    Model1_TRIOS_Orientation_X_(i) = SCAN_TRIOS_MODEL1.Orientation(1);
+    Model1_TRIOS_Orientation_Y(i) = SCAN_TRIOS_MODEL1.Orientation(2);
+    Model1_TRIOS_Orientation_Z(i) = SCAN_TRIOS_MODEL1.Orientation(3);
+    Model1_TRIOS_Z1_NP(i) = Model2_TRIOS_Z1(i);
+    Model1_TRIOS_Z2_PP(i) = Model2_TRIOS_Z2(i);
+    
+% Vecteur PRIMESCAN
+    Vect1_PRIME1 = [Model1_PRIME_X1(i), Model1_PRIME_Y1(i), Model1_PRIME_Z1(i)]; % Premier Centre 
+    Vect2_PRIME1 = [Model1_PRIME_X2(i), Model1_PRIME_Y2(i), Model1_PRIME_Z2(i)]; % Deuxième Centre
+    VectModel1_PRIME = Vect1_PRIME1 - Vect2_PRIME1;
+%Vecteur TRIOSSCAN
+    Vect1_TRIOS1 = [Model1_TRIOS_X1(i), Model1_TRIOS_Y1(i), Model1_TRIOS_Z1(i)]; % Premier Centre 
+    Vect2_TRIOS1 = [Model1_TRIOS_X2(i), Model1_TRIOS_Y2(i), Model1_TRIOS_Z2(i)]; % Deuxième Centre
+    VectModel1_TRIOS = Vect1_TRIOS1 - Vect2_TRIOS1;
+
+    % MODEL 2 
+    SCAN_PRIME_MODEL2 = pcfitcylinder(ptCloud_PRIME,maxDistance, 'SampleIndices',sampleIndices2_PRIME);
+    SCAN_TRIOS_MODEL2 = pcfitcylinder(ptCloud_TRIOS,maxDistance, 'SampleIndices',sampleIndices2_TRIOS);
+%PRIMESCAN
+    Model2_PRIME_X1(i) = SCAN_PRIME_MODEL2.Parameters(1);
+    Model2_PRIME_X2(i) = SCAN_PRIME_MODEL2.Parameters(4);
+    Model2_PRIME_Y1(i) = SCAN_PRIME_MODEL2.Parameters(2);
+    Model2_PRIME_Y2(i) = SCAN_PRIME_MODEL2.Parameters(5);
+    Model2_PRIME_Z1(i) = SCAN_PRIME_MODEL2.Parameters(3);
+    Model2_PRIME_Z2(i) = SCAN_PRIME_MODEL2.Parameters(6);
+    Model2_PRIME_Radius(i) = SCAN_PRIME_MODEL2.Parameters(7);
+    Model2_PRIME_Height(i)  = SCAN_PRIME_MODEL2.Height;
+    Model2_PRIME_Center_X(i) = SCAN_PRIME_MODEL2.Center(1);
+    Model2_PRIME_Center_Y(i) = SCAN_PRIME_MODEL2.Center(2);
+    Model2_PRIME_Center_Z(i) = SCAN_PRIME_MODEL2.Center(3);
+    Model2_PRIME_Orientation_X(i) = SCAN_PRIME_MODEL2.Orientation(1);
+    Model2_PRIME_Orientation_Y(i) = SCAN_PRIME_MODEL2.Orientation(2);
+    Model2_PRIME_Orientation_Z(i) = SCAN_PRIME_MODEL2.Orientation(3);
+    Model2_PRIME_X1_NP(i) = Model2_PRIME_X1(i);
+    Model2_PRIME_X2_PP(i) = Model2_PRIME_X2(i);
+    Model2_PRIME_X1_NP(i) = Model2_PRIME_X1(i);
+    Model2_PRIME_X2_PP(i) = Model2_PRIME_X2(i);
+    Model2_PRIME_Y1_2P(i) = Model2_PRIME_Y1(i);
+    Model2_PRIME_Y2_3P(i) = Model2_PRIME_Y2(i);
+    Model2_PRIME_Y1_2P(i) = Model2_PRIME_Y1(i);
+    Model2_PRIME_Y2_3P(i) = Model2_PRIME_Y2(i);
+%TRIOSSCAN
+    Model2_TRIOS_X1(i) = SCAN_TRIOS_MODEL2.Parameters(1);
+    Model2_TRIOS_X2(i) = SCAN_TRIOS_MODEL2.Parameters(4);
+    Model2_TRIOS_Y1(i) = SCAN_TRIOS_MODEL2.Parameters(2);
+    Model2_TRIOS_Y2(i) = SCAN_TRIOS_MODEL2.Parameters(5);
+    Model2_TRIOS_Z1(i) = SCAN_TRIOS_MODEL2.Parameters(3);
+    Model2_TRIOS_Z2(i) = SCAN_TRIOS_MODEL2.Parameters(6);
+    Model2_TRIOS_Radius(i) = SCAN_TRIOS_MODEL2.Parameters(7);
+    Model2_TRIOS_Height(i)  = SCAN_TRIOS_MODEL2.Height;
+    Model2_TRIOS_Center_X(i) = SCAN_TRIOS_MODEL2.Center(1);
+    Model2_TRIOS_Center_Y(i) = SCAN_TRIOS_MODEL2.Center(2);
+    Model2_TRIOS_Center_Z(i) = SCAN_TRIOS_MODEL2.Center(3);
+    Model2_TRIOS_Orientation_X(i) = SCAN_TRIOS_MODEL2.Orientation(1);
+    Model2_TRIOS_Orientation_Y(i) = SCAN_TRIOS_MODEL2.Orientation(2);
+    Model2_TRIOS_Orientation_Z(i) = SCAN_TRIOS_MODEL2.Orientation(3);
+    Model2_TRIOS_Z1_NP(i) = Model2_TRIOS_Z1(i);
+    Model2_TRIOS_Z2_PP(i) = Model2_TRIOS_Z2(i);
+%Vect_PRIMESCAN
+    Vect1_PRIME2 = [Model2_PRIME_X1(i), Model2_PRIME_Y1(i), Model2_PRIME_Z1(i)]; % Premier Centre 
+    Vect2_PRIME2 = [Model2_PRIME_X2(i), Model2_PRIME_Y2(i), Model2_PRIME_Z2(i)]; % Deuxième Centre
+    VectModel2_PRIME = Vect1_PRIME2 - Vect2_PRIME2;
+%Vect_TRIOSSCAN
+  Vect1_TRIOS2 = [Model2_TRIOS_X1(i), Model2_TRIOS_Y1(i), Model2_TRIOS_Z1(i)]; % Premier Centre 
+    Vect2_TRIOS2 = [Model2_TRIOS_X2(i), Model2_TRIOS_Y2(i), Model2_TRIOS_Z2(i)]; % Deuxième Centre
+    VectModel2_TRIOS = Vect1_TRIOS2 - Vect2_TRIOS2;
+
+
+%Model1_PRIME :
+%Pour X :
+if Model1_PRIME_X1(i) <0;
+Model1_PRIME_X1_NP(i)= Model1_PRIME_X1(i);
+else Model1_PRIME_X2_PP(i) = Model1_PRIME_X1(i);
+end
+
+if Model1_PRIME_X2(i)>0;
+Model1_PRIME_X2_PP(i) = Model1_PRIME_X2(i);
+else Model1_PRIME_X1_NP(i) = Model1_PRIME_X2(i);
+end
+%Model2_PRIME
+%POUR X :
+if Model2_PRIME_X1(i) <0 ;
+Model2_PRIME_X1_NP(i)=Model2_PRIME_X1(i) ;
+else Model2_PRIME_X2_PP(i) = Model2_PRIME_X1(i);
+end
+
+if Model2_PRIME_X2(i)>0 ;
+Model2_PRIME_X2_PP(i) = Model2_PRIME_X2(i);
+else Model2_PRIME_X1_NP(i) = Model2_PRIME_X2(i);
+end
+%Model1_PRIME
+%POUR Y :
+if Model1_PRIME_Y1(i) <20;
+Model1_PRIME_Y1_2P(i)=Model1_PRIME_Y1(i);
+else Model1_PRIME_Y2_3P(i) = Model1_PRIME_Y1(i);
+end
+
+if Model1_PRIME_Y2(i)>30 ;
+Model1_PRIME_Y2_3P(i) = Model1_PRIME_Y2(i);
+else Model1_PRIME_Y1_2P(i) = Model1_PRIME_Y2(i);
+end
+%Model2_PRIME
+%POUR Y
+if Model2_PRIME_Y1(i) <20 ;
+Model2_PRIME_Y1_2P(i)=Model2_PRIME_Y1(i) ;
+else Model2_PRIME_Y2_3P(i) = Model2_PRIME_Y1(i);
+end
+
+if Model2_PRIME_Y2(i)>30 ;
+Model2_PRIME_Y2_3P(i) = Model2_PRIME_Y2(i);
+else Model2_PRIME_Y1_2P(i) = Model2_PRIME_Y2(i);
+end
+    CosTheta_PRIME(i) = dot(VectModel1_PRIME,VectModel2_PRIME)/(norm(VectModel1_PRIME)*norm(VectModel2_PRIME));
+    Theta_PRIME(i) = acosd(CosTheta_PRIME(i));
+    if Theta_PRIME(i) > 170 ;
+        Theta_PRIME_V(i) = 180 - Theta_PRIME(i) ;
+    else Theta_PRIME_V(i) = Theta_PRIME(i) ;
+    end
+
+%Model1_TRIOS :
+%Pour Z :
+if Model1_TRIOS_Z1(i) <0;
+Model1_TRIOS_Z1_NP(i)=Model1_TRIOS_Z1(i);
+else Model1_TRIOS_Z2_PP(i) = Model1_TRIOS_Z1(i);
+end
+
+if Model1_TRIOS_Z2(i)>0;
+Model1_TRIOS_Z2_PP(i) = Model1_TRIOS_Z2(i);
+else Model1_TRIOS_Z1_NP(i) = Model1_TRIOS_Z2(i);
+end
+
+%Model2
+
+if Model2_TRIOS_Z1(i) <0;
+Model2_TRIOS_Z1_NP(i)=Model2_TRIOS_Z1(i);
+else Model2_TRIOS_Z2_PP(i) = Model2_TRIOS_Z1(i);
+end
+
+if Model2_TRIOS_Z2(i)>0;
+Model2_TRIOS_Z2_PP(i) = Model2_TRIOS_Z2(i);
+else Model2_TRIOS_Z1_NP(i) = Model2_TRIOS_Z2(i);
+end
+
+
+
+    CosTheta_TRIOS(i) = dot(VectModel1_TRIOS,VectModel2_TRIOS)/(norm(VectModel1_TRIOS)*norm(VectModel2_TRIOS));
+    Theta_TRIOS(i) = acosd(CosTheta_TRIOS(i));
+    if Theta_TRIOS(i) > 170 ;
+        Theta_TRIOS_V(i) = 180 - Theta_TRIOS(i) ;
+    else Theta_TRIOS_V(i) = Theta_TRIOS(i) ;
+    end
+end
+
+
+%%
+% Plot the two cylinders into the figures
+figure(1)
+plot(SCAN_PRIME_MODEL1)
+plot(SCAN_PRIME_MODEL2)
+
+figure(2)
+plot(SCAN_TRIOS_MODEL1)
+plot(SCAN_TRIOS_MODEL2)
+%%
+
+% Calcul of the Mean, the Standatd deviation and the Median for Axis-X Y
+% and Z.
+
+%Model1_PRIME_X1
+Moyenne_Model1_PRIME_X1 = mean(Model1_PRIME_X1_NP);
+median_Model1_PRIME_X1 = median(Model1_PRIME_X1_NP);
+STD_Model1_PRIME_X1 = std(Model1_PRIME_X1_NP);
+
+%Model1_PRIME_X2
+Moyenne_Model1_PRIME_X2 = mean(Model1_PRIME_X2_PP);
+median_Model1_PRIME_X2 = median(Model1_PRIME_X2_PP);
+STD_Model1_PRIME_X2 = std(Model1_PRIME_X2_PP);
+
+%Model1_PRIME_Y1
+Moyenne_Model1_PRIME_Y1 = mean(Model1_PRIME_Y1_2P);
+median_Model1_PRIME_Y1 = median(Model1_PRIME_Y1_2P);
+STD_Model1_PRIME_Y1 = std(Model1_PRIME_Y1_2P);
+
+%Model1_PRIME_Y2
+Moyenne_Model1_PRIME_Y2 = mean(Model1_PRIME_Y2_3P);
+median_Model1_PRIME_Y2 = median(Model1_PRIME_Y2_3P);
+STD_Model1_PRIME_Y2 = std(Model1_PRIME_Y2_3P);
+
+%Model1_PRIME_Z1
+Moyenne_Model1_PRIME_Z1 = mean(Model1_PRIME_Z1);
+median_Model1_PRIME_Z1 = median(Model1_PRIME_Z1);
+STD_Model1_PRIME_Z1 = std(Model1_PRIME_Z1);
+
+%Model1_PRIME_Z2
+Moyenne_Model1_PRIME_Z2 = mean(Model1_PRIME_Z2);
+median_Model1_PRIME_Z2 = median(Model1_PRIME_Z2);
+STD_Model1_PRIME_Z2 = std(Model1_PRIME_Z2);
+
+
+%Model2_PRIME_X1
+Moyenne_Model2_PRIME_X1 = mean(Model2_PRIME_X1_NP);
+median_Model2_PRIME_X1 = median(Model2_PRIME_X1_NP);
+STD_Model2_PRIME_X1 = std(Model2_PRIME_X1_NP);
+
+%Model2_PRIME_X2
+Moyenne_Model2_PRIME_X2 = mean(Model2_PRIME_X2_PP);
+median_Model2_PRIME_X2 = median(Model2_PRIME_X2_PP);
+STD_Model2_PRIME_X2 = std(Model2_PRIME_X2_PP);
+
+%Model2_PRIME_Y1
+Moyenne_Model2_PRIME_Y1 = mean(Model2_PRIME_Y1_2P);
+median_Model2_PRIME_Y1 = median(Model2_PRIME_Y1_2P);
+STD_Model2_PRIME_Y1 = std(Model2_PRIME_Y1_2P);
+
+%Model2_PRIME_Y2
+Moyenne_Model2_PRIME_Y2 = mean(Model2_PRIME_Y2_3P);
+median_Mode12_Y2 = median(Model2_PRIME_Y2_3P);
+STD_Model1_PRIME_Y2 = std(Model2_PRIME_Y2_3P);
+
+%Model2_PRIME_Z1
+Moyenne_Model2_PRIME_Z1 = mean(Model2_PRIME_Z1);
+median_Model2_PRIME_Z1 = median(Model2_PRIME_Z1);
+STD_Model2_PRIME_Z1 = std(Model2_PRIME_Z1);
+
+%Model2_PRIME_Z2
+Moyenne_Model2_PRIME_Z2 = mean(Model2_PRIME_Z2);
+median_Model2_PRIME_Z2 = median(Model2_PRIME_Z2);
+STD_Model2_PRIME_Z2 = std(Model2_PRIME_Z2);
+
+
+%Model1_PRIME_Height
+Moyenne_Model1_PRIME_Height = mean(Model1_PRIME_Height);
+median_Model1_PRIME_Height = median(Model1_PRIME_Height);
+STD_Model1_PRIME_Height = std(Model1_PRIME_Height);
+
+%Model2_PRIME_Height
+Moyenne_Model2_PRIME_Height = mean(Model2_PRIME_Height);
+median_Model2_PRIME_Height = median(Model2_PRIME_Height);
+STD_Model2_PRIME_Height = std(Model2_PRIME_Height);
+
+%%
+%Calcul of the Mean, the Standatd deviation and the Median for the radius
+
+%Model1_PRIME_Radius
+Moyenne_Model1_PRIME_Radius = mean(Model1_PRIME_Radius);
+median_Model1_PRIME_Radius = median(Model1_PRIME_Radius);
+STD_Model1_PRIME_Radius = std(Model1_PRIME_Radius);
+%Model2_PRIME_Radius
+Moyenne_Model2_PRIME_Radius = mean(Model2_PRIME_Radius);
+median_Model2_PRIME_Radius = median(Model2_PRIME_Radius);
+STD_Model2_PRIME_Radius = std(Model2_PRIME_Radius);
+
+%%
+%Calcul of the Mean, the Standatd deviation and the Median for the
+%orientation
+
+%Model1_PRIME_PRIME_Orientation_X
+Moyenne_Model1_PRIME_Orientation_X = mean(Model1_PRIME_Orientation_X_);
+median_Model1_PRIME_Orientation_X = median(Model1_PRIME_Orientation_X_);
+STD_Model1_PRIME_Orientation_X = std(Model1_PRIME_Orientation_X_);
+%Model1_PRIME_Orientation_Y
+Moyenne_Model1_PRIME_Orientation_Y = mean(Model1_PRIME_Orientation_Y);
+median_Model1_PRIME_Orientation_Y = median(Model1_PRIME_Orientation_Y);
+STD_Model1_PRIME_Orientation_Y = std(Model1_PRIME_Orientation_Y);
+%Model1_PRIME_Orientation_Z
+Moyenne_Model1_PRIME_Orientation_Z = mean(Model1_PRIME_Orientation_Z);
+median_Model1_PRIME_Orientation_Z = median(Model1_PRIME_Orientation_Z);
+STD_Model1_PRIME_Orientation_Z = std(Model1_PRIME_Orientation_Z);
+
+%Model2_PRIME_Orientation_X
+Moyenne_Model2_PRIME_Orientation_X = mean(Model2_PRIME_Orientation_X);
+median_Model2_PRIME_Orientation_X = median(Model2_PRIME_Orientation_X);
+STD_Model2_PRIME_Orientation_X = std(Model2_PRIME_Orientation_X);
+%Model2_PRIME_Orientation_Y
+Moyenne_Model2_PRIME_Orientation_Y = mean(Model2_PRIME_Orientation_Y);
+median_Model2_PRIME_Orientation_Y = median(Model2_PRIME_Orientation_Y);
+STD_Model2_PRIME_Orientation_Y = std(Model2_PRIME_Orientation_Y);
+%Model2_PRIME_Orientation_Z
+Moyenne_Model2_PRIME_Orientation_Z = mean(Model2_PRIME_Orientation_Z);
+median_Model2_PRIME_Orientation_Z = median(Model2_PRIME_Orientation_Z);
+STD_Model2_PRIME_Orientation_Z = std(Model2_PRIME_Orientation_Z);
+
+
+%%
+%Calcul of the Mean, the Standatd deviation and the Median for the Center
+
+%Model1_PRIME_Center_X
+Moyenne_Model1_PRIME_Center_X = mean(Model1_PRIME_Center_X);
+median_Model1_PRIME_Center_X = median(Model1_PRIME_Center_X);
+STD_Model1_PRIME_Center_X = std(Model1_PRIME_Center_X);
+
+%Model1_PRIME_Center_Y
+Moyenne_Model1_PRIME_Center_Y = mean(Model1_PRIME_Center_Y);
+median_Model1_PRIME_Center_Y = median(Model1_PRIME_Center_Y);
+STD_Model1_PRIME_Center_Y = std(Model1_PRIME_Center_Y);
+
+%Model1_PRIME_Center_Z
+Moyenne_Model1_PRIME_Center_Z = mean(Model1_PRIME_Center_Z);
+median_Model1_PRIME_Center_Z = median(Model1_PRIME_Center_Z);
+STD_Model1_PRIME_Center_Z = std(Model1_PRIME_Center_Z);
+
+
+%Model2_PRIME_Center_X
+Moyenne_Model2_PRIME_Center_X = mean(Model2_PRIME_Center_X);
+median_Model2_PRIME_Center_X = median(Model2_PRIME_Center_X);
+STD_Model2_PRIME_Center_X  = std(Model2_PRIME_Center_X);
+
+%Model2_PRIME_Center_Y
+Moyenne_Model2_PRIME_Center_Y = mean(Model2_PRIME_Center_Y);
+median_Model2_PRIME_Center_Y = median(Model2_PRIME_Center_Y);
+STD_Model2_PRIME_Center_Y = std(Model2_PRIME_Center_Y);
+
+
+%Model2_PRIME_Center_Z
+Moyenne_Model2_PRIME_Center_Z = mean(Model2_PRIME_Center_Z);
+median_Model2_PRIME_Center_Z = median(Model2_PRIME_Center_Z);
+STD_Model2_PRIME_Center_Z = std(Model2_PRIME_Center_Z);
+
+
+%%
+%Angle of Deviation in deg
+
+%Angle de deviation 
+Moyenne_Angle_PRIME = mean(Theta_PRIME_V);
+median_Angle_PRIME = median(Theta_PRIME_V);
+STD_Angle_PRIME = std(Theta_PRIME_V);
+
+%%
+
+%Model1_TRIOS_X1
+Moyenne_Model1_TRIOS_X1 = mean(Model1_TRIOS_X1);
+median_Model1_TRIOS_X1 = median(Model1_TRIOS_X1);
+STD_Model1_TRIOS_TRIOS_X1 = std(Model1_TRIOS_X1);
+
+%Model1_TRIOS_X2
+Moyenne_Model1_TRIOS_X2 = mean(Model1_TRIOS_X2);
+median_Model1_TRIOS__X2 = median(Model1_TRIOS_X2);
+STD_Model1_TRIOS_X2 = std(Model1_TRIOS_X2);
+
+%Model1_TRIOS_Y1
+Moyenne_Model1_TRIOS_Y1 = mean(Model1_TRIOS_Y1);
+median_Model1_TRIOS_Y1 = median(Model1_TRIOS_Y1);
+STD_Model1_TRIOS_Y1 = std(Model1_TRIOS_Y1);
+
+%Model1_TRIOS_Y2
+Moyenne_Model1_TRIOS_Y2 = mean(Model1_TRIOS_Y2);
+median_Model1_TRIOS_Y2 = median(Model1_TRIOS_Y2);
+STD_Model1_TRIOS_Y2 = std(Model1_TRIOS_Y2);
+
+%Model1_TRIOS_Z1
+Moyenne_Model1_TRIOS_Z1 = mean(Model1_TRIOS_Z1_NP);
+median_Model1_TRIOS_Z1 = median(Model1_TRIOS_Z1_NP);
+STD_Model1_TRIOS_Z1 = std(Model1_TRIOS_Z1_NP);
+
+%Model1_TRIOS_Z2
+Moyenne_Model1_TRIOS_Z2 = mean(Model1_TRIOS_Z2_PP);
+median_Model1_TRIOS_Z2 = median(Model1_TRIOS_Z2_PP);
+STD_Model1_TRIOS_Z2 = std(Model1_TRIOS_Z2_PP);
+
+
+%Model2_TRIOS_X1
+Moyenne_Model2_TRIOS_X1 = mean(Model2_TRIOS_X1);
+median_Model2_TRIOS_X1 = median(Model2_TRIOS_X1);
+STD_Model2_TRIOS_X1 = std(Model2_TRIOS_X1);
+
+%Model2_TRIOS_X2
+Moyenne_Model2_TRIOS_X2 = mean(Model2_TRIOS_X2);
+median_Model2_TRIOS_X2 = median(Model2_TRIOS_X2);
+STD_Model2_TRIOS_X2 = std(Model2_TRIOS_X2);
+
+%Model2_TRIOS_Y1
+Moyenne_Model2_TRIOS_Y1 = mean(Model2_TRIOS_Y1);
+median_Model2_TRIOS_Y1 = median(Model2_TRIOS_Y1);
+STD_Model2_TRIOS_Y1 = std(Model2_TRIOS_Y1);
+
+%Model2_TRIOS_Y2
+Moyenne_Model2_TRIOS_Y2 = mean(Model2_TRIOS_Y2);
+median_Mode12_Y2 = median(Model2_TRIOS_Y2);
+STD_Model1_TRIOS_Y2 = std(Model2_TRIOS_Y2);
+
+%Model2_TRIOS_Z1
+Moyenne_Model2_TRIOS_Z1 = mean(Model2_TRIOS_Z1_NP);
+median_Model2_TRIOS_Z1 = median(Model2_TRIOS_Z1_NP);
+STD_Model2_TRIOS_Z1 = std(Model2_TRIOS_Z1_NP);
+
+%Model2_TRIOS_Z2
+Moyenne_Model2_TRIOS_Z2 = mean(Model2_TRIOS_Z2_PP);
+median_Model2_TRIOS_Z2 = median(Model2_TRIOS_Z2_PP);
+STD_Model2_TRIOS_Z2 = std(Model2_TRIOS_Z2_PP);
+
+
+%Model1_TRIOS_Height
+Moyenne_Model1_TRIOS_Height = mean(Model1_TRIOS_Height);
+median_Model1_TRIOS_Height = median(Model1_TRIOS_Height);
+STD_Model1_TRIOS_Height = std(Model1_TRIOS_Height);
+
+%Model2_TRIOS_Height
+Moyenne_Model2_TRIOS_Height = mean(Model2_TRIOS_Height);
+median_Model2_TRIOS_Height = median(Model2_TRIOS_Height);
+STD_Model2_TRIOS_Height = std(Model2_TRIOS_Height);
+
+%%
+%Model1_TRIOS_Radius
+Moyenne_Model1_TRIOS_Radius = mean(Model1_TRIOS_Radius);
+median_Model1_TRIOS_Radius = median(Model1_TRIOS_Radius);
+STD_Model1_TRIOS_Radius = std(Model1_TRIOS_Radius);
+%Model2_TRIOS_Radius
+Moyenne_Model2_TRIOS_Radius = mean(Model2_TRIOS_Radius);
+median_Model2_TRIOS_Radius = median(Model2_TRIOS_Radius);
+STD_Model2_TRIOS_Radius = std(Model2_TRIOS_Radius);
+
+%%
+%Model1_TRIOS_TRIOS_Orientation_X
+Moyenne_Model1_TRIOS_Orientation_X = mean(Model1_TRIOS_Orientation_X_);
+median_Model1_TRIOS_Orientation_X = median(Model1_TRIOS_Orientation_X_);
+STD_Model1_TRIOS_Orientation_X = std(Model1_TRIOS_Orientation_X_);
+%Model1_TRIOS_Orientation_Y
+Moyenne_Model1_TRIOS_Orientation_Y = mean(Model1_TRIOS_Orientation_Y);
+median_Model1_TRIOS_Orientation_Y = median(Model1_TRIOS_Orientation_Y);
+STD_Model1_TRIOS_Orientation_Y = std(Model1_TRIOS_Orientation_Y);
+%Model1_TRIOS_Orientation_Z
+Moyenne_Model1_TRIOS_Orientation_Z = mean(Model1_TRIOS_Orientation_Z);
+median_Model1_TRIOS_Orientation_Z = median(Model1_TRIOS_Orientation_Z);
+STD_Model1_TRIOS_Orientation_Z = std(Model1_TRIOS_Orientation_Z);
+
+%Model2_TRIOS_Orientation_X
+Moyenne_Model2_TRIOS_Orientation_X = mean(Model2_TRIOS_Orientation_X);
+median_Model2_TRIOS_Orientation_X = median(Model2_TRIOS_Orientation_X);
+STD_Model2_TRIOS_Orientation_X = std(Model2_TRIOS_Orientation_X);
+%Model2_TRIOS_Orientation_Y
+Moyenne_Model2_TRIOS_Orientation_Y = mean(Model2_TRIOS_Orientation_Y);
+median_Model2_TRIOS_Orientation_Y = median(Model2_TRIOS_Orientation_Y);
+STD_Model2_TRIOS_Orientation_Y = std(Model2_TRIOS_Orientation_Y);
+%Model2_TRIOS_Orientation_Z
+Moyenne_Model2_TRIOS_Orientation_Z = mean(Model2_TRIOS_Orientation_Z);
+median_Model2_TRIOS_Orientation_Z = median(Model2_TRIOS_Orientation_Z);
+STD_Model2_TRIOS_Orientation_Z = std(Model2_TRIOS_Orientation_Z);
+
+
+%%
+
+%Model1_TRIOS_Center_X
+Moyenne_Model1_TRIOS_Center_X = mean(Model1_TRIOS_Center_X);
+median_Model1_TRIOS_Center_X = median(Model1_TRIOS_Center_X);
+STD_Model1_TRIOS_Center_X = std(Model1_TRIOS_Center_X);
+
+%Model1_TRIOS_Center_Y
+Moyenne_Model1_TRIOS_Center_Y = mean(Model1_TRIOS_Center_Y);
+median_Model1_TRIOS_Center_Y = median(Model1_TRIOS_Center_Y);
+STD_Model1_TRIOS_Center_Y = std(Model1_TRIOS_Center_Y);
+
+%Model1_TRIOS_Center_Z
+Moyenne_Model1_TRIOS_Center_Z = mean(Model1_TRIOS_Center_Z);
+median_Model1_TRIOS_Center_Z = median(Model1_TRIOS_Center_Z);
+STD_Model1_TRIOS_Center_Z = std(Model1_TRIOS_Center_Z);
+
+
+%Model2_TRIOS_Center_X
+Moyenne_Model2_TRIOS_Center_X = mean(Model2_TRIOS_Center_X);
+median_Model2_TRIOS_Center_X = median(Model2_TRIOS_Center_X);
+STD_Model2_TRIOS_Center_X  = std(Model2_TRIOS_Center_X);
+
+%Model2_TRIOS_Center_Y
+Moyenne_Model2_TRIOS_Center_Y = mean(Model2_TRIOS_Center_Y);
+median_Model2_TRIOS_Center_Y = median(Model2_TRIOS_Center_Y);
+STD_Model2_TRIOS_Center_Y = std(Model2_TRIOS_Center_Y);
+
+
+%Model2_TRIOS_Center_Z
+Moyenne_Model2_TRIOS_Center_Z = mean(Model2_TRIOS_Center_Z);
+median_Model2_TRIOS_Center_Z = median(Model2_TRIOS_Center_Z);
+STD_Model2_TRIOS_Center_Z = std(Model2_TRIOS_Center_Z);
+
+
+%%
+%Angle de deviation 
+Moyenne_Angle_TRIOS = mean(Theta_TRIOS_V);
+median_Angle_TRIOS = median(Theta_TRIOS_V);
+STD_Angle_TRIOS = std(Theta_TRIOS_V);
+
+%%
+
+% Draw a vector that passes through the center of the cylinder :
+%TRIOSSCAN    
+figure(2)
+line1_TRIOS = line([Moyenne_Model1_TRIOS_X1,Moyenne_Model1_TRIOS_X2],[Moyenne_Model1_TRIOS_Y1,Moyenne_Model1_TRIOS_Y2], [Moyenne_Model1_TRIOS_Z1,Moyenne_Model1_TRIOS_Z2]);
+line1_TRIOS.LineWidth = 2;
+line1_TRIOS.Color = 'red';
+line2_TRIOS = line([Moyenne_Model2_TRIOS_X1,Moyenne_Model2_TRIOS_X2],[Moyenne_Model2_TRIOS_Y1,Moyenne_Model2_TRIOS_Y2],[Moyenne_Model2_TRIOS_Z1,Moyenne_Model2_TRIOS_Z2]);
+line2_TRIOS.LineWidth = 2;
+line2_TRIOS.Color = 'green';
+
+% Draw a vector that passes through the center of the cylinder :
+
+%PRIMESCAN
+figure(1)
+line1_PRIME = line([Moyenne_Model1_PRIME_X1,Moyenne_Model1_PRIME_X2],[Moyenne_Model1_PRIME_Y1,Moyenne_Model1_PRIME_Y2], [Moyenne_Model1_PRIME_Z1,Moyenne_Model1_PRIME_Z2]);
+line1_PRIME.LineWidth = 2;
+line1_PRIME.Color = 'red';
+line2_PRIME = line([Moyenne_Model2_PRIME_X1,Moyenne_Model2_PRIME_X2],[Moyenne_Model2_PRIME_Y1,Moyenne_Model2_PRIME_Y2],[Moyenne_Model2_PRIME_Z1,Moyenne_Model2_PRIME_Z2]);
+line2_PRIME.LineWidth = 2;
+line2_PRIME.Color = 'green';
+
+%%
+%The deviation between the two models
+%Deviation de la moyenne :
+Deviation_Mean_PRIME_Center_X = abs(Moyenne_Model2_PRIME_Center_X-Moyenne_Model1_PRIME_Center_X);
+Deviation_Mean_PRIME_Center_Y = abs(Moyenne_Model2_PRIME_Center_Y-Moyenne_Model1_PRIME_Center_Y);
+Deviation_Mean_PRIME_Center_Z = abs(Moyenne_Model2_PRIME_Center_Z-Moyenne_Model1_PRIME_Center_Z);
+Deviation_Mean_PRIME_Radius = abs(Moyenne_Model2_PRIME_Radius-Moyenne_Model1_PRIME_Radius);
+Deviation_Mean_PRIME_Height = abs(Moyenne_Model2_PRIME_Height-Moyenne_Model1_PRIME_Height);
+
+%Deviation de l'ecart type : 
+Deviation_SD_PRIME_Center_X = abs(STD_Model2_PRIME_Center_X-STD_Model1_PRIME_Center_X);
+Deviation_SD_PRIME_Center_Y = abs(STD_Model2_PRIME_Center_Y-STD_Model1_PRIME_Center_Y);
+Deviation_SD_PRIME_Center_Z = abs(STD_Model2_PRIME_Center_Z-STD_Model1_PRIME_Center_Z);
+Deviation_SD_PRIME_Radius = abs(STD_Model2_PRIME_Radius-STD_Model1_PRIME_Radius);
+Deviation_SD_PRIME_Height = abs(STD_Model2_PRIME_Height-STD_Model1_PRIME_Height);
+
+%Deviation de la median : 
+Deviation_median_PRIME_Center_X = abs(median_Model2_PRIME_Center_X-median_Model1_PRIME_Center_X);
+Deviation_median_PRIME_Center_Y = abs(median_Model2_PRIME_Center_Y-median_Model1_PRIME_Center_Y);
+Deviation_median_PRIME_Center_Z = abs(median_Model2_PRIME_Center_Z-median_Model1_PRIME_Center_Z);
+Deviation_median_PRIME_Radius = abs(median_Model2_PRIME_Radius-median_Model1_PRIME_Radius);
+Deviation_median_PRIME_Height = abs(median_Model2_PRIME_Height-median_Model1_PRIME_Height);
+
+%Deviation de l'angle
+Deviation_Mean_PRIME_Angle = Moyenne_Angle_PRIME;
+Deviation_SD_PRIME_Angle = STD_Angle_PRIME;
+Deviation_median_PRIME_Angle = median_Angle_PRIME;
+%%
+%The deviation between the two models
+
+%Deviation de la moyenne :
+Deviation_Mean_TRIOS_Center_X = abs(Moyenne_Model2_TRIOS_Center_X-Moyenne_Model1_TRIOS_Center_X);
+Deviation_Mean_TRIOS_Center_Y = abs(Moyenne_Model2_TRIOS_Center_Y-Moyenne_Model1_TRIOS_Center_Y);
+Deviation_Mean_TRIOS_Center_Z = abs(Moyenne_Model2_TRIOS_Center_Z-Moyenne_Model1_TRIOS_Center_Z);
+Deviation_Mean_TRIOS_Radius = abs(Moyenne_Model2_TRIOS_Radius-Moyenne_Model1_TRIOS_Radius);
+Deviation_Mean_TRIOS_Height = abs(Moyenne_Model2_TRIOS_Height-Moyenne_Model1_TRIOS_Height);
+
+%Deviation de l'ecart type : 
+Deviation_SD_TRIOS_Center_X = abs(STD_Model2_TRIOS_Center_X-STD_Model1_TRIOS_Center_X);
+Deviation_SD_TRIOS_Center_Y = abs(STD_Model2_TRIOS_Center_Y-STD_Model1_TRIOS_Center_Y);
+Deviation_SD_TRIOS_Center_Z = abs(STD_Model2_TRIOS_Center_Z-STD_Model1_TRIOS_Center_Z);
+Deviation_SD_TRIOS_Radius = abs(STD_Model2_TRIOS_Radius-STD_Model1_TRIOS_Radius);
+Deviation_SD_TRIOS_Height = abs(STD_Model2_TRIOS_Height-STD_Model1_TRIOS_Height);
+
+%Deviation de la median : 
+Deviation_median_TRIOS_Center_X = abs(median_Model2_TRIOS_Center_X-median_Model1_TRIOS_Center_X);
+Deviation_median_TRIOS_Center_Y = abs(median_Model2_TRIOS_Center_Y-median_Model1_TRIOS_Center_Y);
+Deviation_median_TRIOS_Center_Z = abs(median_Model2_TRIOS_Center_Z-median_Model1_TRIOS_Center_Z);
+Deviation_median_TRIOS_Radius = abs(median_Model2_TRIOS_Radius-median_Model1_TRIOS_Radius);
+Deviation_median_TRIOS_Height = abs(median_Model2_TRIOS_Height-median_Model1_TRIOS_Height);
+
+%Deviation de l'angle
+Deviation_Mean_TRIOS_Angle = Moyenne_Angle_TRIOS;
+Deviation_SD_TRIOS_Angle = STD_Angle_TRIOS;
+Deviation_median_TRIOS_Angle = median_Angle_TRIOS;
+
+%%
+
+% the coordinates of the two circles of the cylinder
+
+Lower_Circle1_coordinates_PRIME = [Moyenne_Model1_PRIME_Center_X Moyenne_Model1_PRIME_Center_Y (Moyenne_Model1_PRIME_Center_Z -(Moyenne_Model1_PRIME_Height/2))] ;
+Upper_Circle1_coordinates_PRIME = [Moyenne_Model1_PRIME_Center_X Moyenne_Model1_PRIME_Center_Y (Moyenne_Model1_PRIME_Center_Z +(Moyenne_Model1_PRIME_Height/2))] ;
+
+
+Lower_Circle2_coordinates_PRIME = [Moyenne_Model2_PRIME_Center_X Moyenne_Model2_PRIME_Center_Y (Moyenne_Model2_PRIME_Center_Z -(Moyenne_Model2_PRIME_Height/2))] ;
+Upper_Circle2_coordinates_PRIME = [Moyenne_Model2_PRIME_Center_X Moyenne_Model2_PRIME_Center_Y (Moyenne_Model2_PRIME_Center_Z +(Moyenne_Model2_PRIME_Height/2))] ;
+
+
+Lower_Circle1_coordinates_TRIOS = [Moyenne_Model1_TRIOS_Center_X Moyenne_Model1_TRIOS_Center_Y (Moyenne_Model1_TRIOS_Center_Z -(Moyenne_Model1_TRIOS_Height/2))] ;
+Upper_Circle1_coordinates_TRIOS = [Moyenne_Model1_TRIOS_Center_X Moyenne_Model1_TRIOS_Center_Y (Moyenne_Model1_TRIOS_Center_Z +(Moyenne_Model1_TRIOS_Height/2))] ;
+
+
+Lower_Circle2_coordinates_PRIME_TRIOS = [Moyenne_Model2_TRIOS_Center_X Moyenne_Model2_TRIOS_Center_Y (Moyenne_Model2_TRIOS_Center_Z -(Moyenne_Model2_TRIOS_Height/2))] ;
+Upper_Circle2_coordinates_PRIME_TRIOS = [Moyenne_Model2_TRIOS_Center_X Moyenne_Model2_TRIOS_Center_Y (Moyenne_Model2_TRIOS_Center_Z +(Moyenne_Model2_TRIOS_Height/2))] ;
